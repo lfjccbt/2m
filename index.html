@@ -1717,7 +1717,6 @@ EXAM_SETUP.subjects.forEach(subject => {
 });
 
 const EXAM_DURATION_MINUTES = EXAM_SETUP.duration;
-const ACTIVE_EXAM_SUBJECTS = EXAM_SETUP.activeForForms;
 
 
 const SUBJECTS = EXAM_SETUP.subjects.map(s => ({
@@ -4317,38 +4316,26 @@ function calculateSubjectMarks(summary) {
     const marks = {};
     let total = 0;
     
+    const activeSubjects = EXAM_SETUP.activeForForms || [];
     
-    for (let subject in summary) {
-        marks[subject] = summary[subject].marks;
-        total += summary[subject].marks;
+    for (let subject of activeSubjects) {
+        if (summary[subject]) {
+            marks[subject] = summary[subject].marks;
+            total += summary[subject].marks;
+        } else {
+            marks[subject] = 0;
+        }
     }
     
     marks.total = total;
     return marks;
 }
 
+// Get active subjects from config
+const activeSubjects = EXAM_SETUP.activeForForms || [];
 
-async function submitToGoogleForms(answersData) {
-    const FORM_URL = GOOGLE_FORMS[assignedForm];
-    
-    if (!FORM_URL) {
-        console.error(`❌ No Google Form URL found for form ${assignedForm}`);
-        saveSubmissionLocally(answersData);
-        return false;
-    }
-
-    try {
-        const marks = calculateSubjectMarks(answersData.summary);
-        const formData = new URLSearchParams();
-        
-
-formData.append(FORM_FIELDS.STUDENT_NAME, answersData.student.name);
-formData.append(FORM_FIELDS.SECTION, answersData.student.sec);
-formData.append(FORM_FIELDS.ROLL_NUMBER, answersData.student.roll);
-formData.append(FORM_FIELDS.ADMISSION_NUMBER, answersData.student.adm);
-
-
-const subjectCodes = ACTIVE_EXAM_SUBJECTS.map(s => {
+// Format subject codes for display
+const subjectCodes = activeSubjects.map(s => {
     if (s === "MATHS_A") return "MA";
     if (s === "MATHS_B") return "MB";
     if (s === "MATHS") return "M";
@@ -4363,72 +4350,42 @@ const subjectCodes = ACTIVE_EXAM_SUBJECTS.map(s => {
 const today = new Date();
 const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear().toString().slice(-2)}`;
 
-
 formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " + subjectCodes);
 
-
-for (let subject of ACTIVE_EXAM_SUBJECTS) {
-   
+// ===== SEND ONLY ACTIVE SUBJECTS =====
+for (let subject of activeSubjects) {
     const markValue = marks[subject]?.toFixed(2) || "0.00";
     
-    
-    switch(subject) {
-        case "PHYSICS":
-            formData.append(FORM_FIELDS.PHYSICS, markValue);
-            break;
-        case "CHEMISTRY":
-            formData.append(FORM_FIELDS.CHEMISTRY, markValue);
-            break;
-        case "MATHS":
-            formData.append(FORM_FIELDS.MATHS, markValue);
-            break;
-        case "MATHS_A":
-            formData.append(FORM_FIELDS.MATHS_A, markValue);
-            break;
-        case "MATHS_B":
-            formData.append(FORM_FIELDS.MATHS_B, markValue);
-            break;
-        case "BOTANY":
-            formData.append(FORM_FIELDS.BOTANY, markValue);
-            break;
-        case "ZOOLOGY":
-            formData.append(FORM_FIELDS.ZOOLOGY, markValue);
-            break;
-        case "BZ":
-            formData.append(FORM_FIELDS.BZ, markValue);
-            break;
-        default:
-            console.log(`No field mapping for subject: ${subject}`);
-    }
-}
-
-      
-        formData.append(FORM_FIELDS.TOTAL_MARKS, marks.total.toFixed(2));
-        
-        
-        const allAnswersString = formatAllAnswersString(progress.answers);
-        formData.append(FORM_FIELDS.ALL_ANSWERS, allAnswersString);
-        
-        console.log("✅ Final submission with subjects:", ACTIVE_EXAM_SUBJECTS.join(", "));
-        console.log("📤 Total marks:", marks.total.toFixed(2));
-        console.log("📤 Answers string length:", allAnswersString.length);
-        
-        await fetch(FORM_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: formData
-        });
-        
-        console.log("✅ Google Forms submission completed");
-        showToast('✅ Exam submitted successfully!', 'success', 5000);
-        
-        clearSavedExam();
-        return true;
-    } catch (error) {
-        console.error("❌ Submission error:", error);
-        saveSubmissionLocally(answersData);
-        showToast('⚠️ Submission saved locally', 'warning', 5000);
-        return false;
+    // Only send if subject has a mapping (not just 0)
+    if (markValue !== "0.00" || marks[subject] !== undefined) {
+        switch(subject) {
+            case "PHYSICS":
+                formData.append(FORM_FIELDS.PHYSICS, markValue);
+                break;
+            case "CHEMISTRY":
+                formData.append(FORM_FIELDS.CHEMISTRY, markValue);
+                break;
+            case "MATHS":
+                formData.append(FORM_FIELDS.MATHS, markValue);
+                break;
+            case "MATHS_A":
+                formData.append(FORM_FIELDS.MATHS_A, markValue);
+                break;
+            case "MATHS_B":
+                formData.append(FORM_FIELDS.MATHS_B, markValue);
+                break;
+            case "BOTANY":
+                formData.append(FORM_FIELDS.BOTANY, markValue);
+                break;
+            case "ZOOLOGY":
+                formData.append(FORM_FIELDS.ZOOLOGY, markValue);
+                break;
+            case "BZ":
+                formData.append(FORM_FIELDS.BZ, markValue);
+                break;
+            default:
+                console.log(`No field mapping for subject: ${subject}`);
+        }
     }
 }
 
