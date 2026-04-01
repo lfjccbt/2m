@@ -1429,7 +1429,66 @@ body.anti-sleep-active {
 </head>
 
 <body>
+<script>
+// Load config from GitHub
+async function loadExamConfig() {
+    const className = window.location.pathname.split('/')[1] || '1D';
+    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
+    
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            const config = await res.json();
+            
+            // Update EXAM_SETUP
+            EXAM_SETUP = config;
+            
+            // Update marks variables
+            MARK_PER_CORRECT = config.correctMark;
+            MARK_PER_WRONG = config.wrongMark;
+            
+            // Update marks display on screen (THIS UPDATES CHANGE #1)
+            const correctDisplay = document.getElementById('correctMarkDisplay');
+            const wrongDisplay = document.getElementById('wrongMarkDisplay');
+            if (correctDisplay) correctDisplay.textContent = `CORRECT ANSWER + ${config.correctMark} MARKS`;
+            if (wrongDisplay) wrongDisplay.textContent = `WRONG ANSWER ${config.wrongMark} MARK`;
+            
+            // Recalculate question numbers
+            let start = 1;
+            EXAM_SETUP.subjects.forEach(s => {
+                s.start = start;
+                s.end = start + s.questions - 1;
+                s.mcq = s.questions - (s.numerical || 0);
+                s.numericalStart = s.end - (s.numerical || 0) + 1;
+                start = s.end + 1;
+            });
+            TOTAL_QUESTIONS = start - 1;
+            document.getElementById('totalQuestionsDisplay').innerHTML = `<strong>TOTAL ${TOTAL_QUESTIONS} QUESTIONS</strong>`;
+            // Update total questions display
+            const totalDisplay = document.getElementById('totalQuestionsDisplay');
+            if (totalDisplay) totalDisplay.innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
+            
+            // Update subject breakdown
+            let breakdownHTML = '';
+            EXAM_SETUP.subjects.forEach(s => {
+                if (s.numerical > 0) {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.mcq} (MCQ), ${s.numerical} (Numerical Input)</strong></p>`;
+                } else {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.questions} (MCQ)</strong></p>`;
+                }
+            });
+            const breakdownDiv = document.getElementById('subjectBreakdownDisplay');
+            if (breakdownDiv) breakdownDiv.innerHTML = breakdownHTML;
+            
+            console.log('✅ Config loaded');
+        }
+    } catch(e) {
+        console.log('Failed to load config');
+    }
+}
 
+loadExamConfig();
+</script>
 
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
@@ -1705,7 +1764,7 @@ const ACCESS_CODE = "lfjc2025";
 const ADMIN_PASSWORD = "admin2025";
 const RESUBMISSION_PASSWORD = "resubmit2025";
 const RESUBMISSION_WINDOW_HOURS = 24;
-let ACTIVE_EXAM_SUBJECTS = [];
+
 
 const ANSWER_KEY_URL = 'answer-key.txt';
 let answerKey = [];
@@ -4309,15 +4368,14 @@ formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " 
 
 
 
-   // Only send marks for ACTIVE subjects from config
+   // Only send marks for subjects that actually have questions
 const activeSubjects = EXAM_SETUP.activeForForms || [];
 
 for (let subject of activeSubjects) {
-    // Only include if subject has marks calculated (not 0.00)
-    const markValue = marks[subject]?.toFixed(2);
-    
-    // Only append if subject exists in marks (has questions)
-    if (markValue !== undefined) {
+    // Check if this subject has marks (has questions)
+    if (marks[subject] !== undefined) {
+        const markValue = marks[subject].toFixed(2);
+        
         switch(subject) {
             case "PHYSICS":
                 formData.append(FORM_FIELDS.PHYSICS, markValue);
@@ -4346,7 +4404,6 @@ for (let subject of activeSubjects) {
         }
     }
 }
-
       
         formData.append(FORM_FIELDS.TOTAL_MARKS, marks.total.toFixed(2));
         
@@ -4864,4 +4921,4 @@ console.log(`📁 Expecting ${TOTAL_QUESTIONS} answers`);
 console.log("✅ Active subjects for this exam:", ACTIVE_EXAM_SUBJECTS.join(", "));
 </script> 
 </body>
-</html> 
+</html> this was taking answer key
