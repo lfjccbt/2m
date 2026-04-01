@@ -1462,7 +1462,7 @@ async function loadExamConfig() {
                 s.numericalStart = s.end - (s.numerical || 0) + 1;
                 start = s.end + 1;
             });
-            window.TOTAL_QUESTIONS = start - 1;
+            TOTAL_QUESTIONS = start - 1;
             
             // Update total questions display
             const totalDisplay = document.getElementById('totalQuestionsDisplay');
@@ -1705,7 +1705,7 @@ let EXAM_SETUP = {
     activeForForms: []
 };
     
-    
+ let TOTAL_QUESTIONS = 0;   
 
 let currentStart = 1;
 EXAM_SETUP.subjects.forEach(subject => {
