@@ -1,7 +1,7 @@
 {
-  "duration": 10,
-  "correctMark": 4,
-  "wrongMark": -1,
+  "duration": 15,
+  "correctMark": 1,
+  "wrongMark": 0,
   "activeForForms": [
     "MATHS",
     "PHYSICS",
@@ -12,18 +12,18 @@
   ],
   "subjects": [
     {
-      "name": "MATHS_B",
-      "questions": 4,
+      "name": "CHEMISTRY",
+      "questions": 7,
       "numerical": 0
     },
     {
-      "name": "PHYSICS",
-      "questions": 8,
+      "name": "ZOOLOGY",
+      "questions": 12,
       "numerical": 0
     },
     {
       "name": "BOTANY",
-      "questions": 10,
+      "questions": 3,
       "numerical": 0
     }
   ]
