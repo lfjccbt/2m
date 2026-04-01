@@ -4418,24 +4418,7 @@ async function submitToGoogleForms(answersData) {
         return false;
     }
 }
-    try {
-        const localSubmissions = JSON.parse(localStorage.getItem('local_exam_submissions') || '[]');
-        localSubmissions.push({
-            ...answersData,
-            savedAt: new Date().toISOString(),
-            needsSync: true,
-            form: assignedForm
-        });
-        
-        localStorage.setItem('local_exam_submissions', JSON.stringify(localSubmissions));
-        
-        console.log('💾 Submission saved locally for manual recovery');
-        showToast('💾 Submission saved locally. Contact administrator if needed.', 'warning', 5000);
-        
-    } catch (error) {
-        console.error('❌ Failed to save submission locally:', error);
-    }
-}
+   
 
 function updateSubmissionStatus(status, message) {
     googleFormsSubmissionStatus = status;
