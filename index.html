@@ -1429,7 +1429,67 @@ body.anti-sleep-active {
 </head>
 
 <body>
+<script>
+// ========== AUTO LOAD CONFIG FROM CLASS REPO ==========
+async function loadClassConfig() {
+    // Detect class from URL or set manually
+    const pathParts = window.location.pathname.split('/');
+    const className = pathParts[1] || '1D'; // Change default as needed
+    
+    const configUrl = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
+    
+    try {
+        const response = await fetch(configUrl);
+        if (response.ok) {
+            const config = await response.json();
+            
+            // Apply config to EXAM_SETUP
+            if (window.EXAM_SETUP) {
+                window.EXAM_SETUP.duration = config.duration;
+                window.EXAM_SETUP.subjects = config.subjects;
+                window.EXAM_SETUP.activeForForms = config.activeForForms;
+                
+                // Update marks
+                window.MARK_PER_CORRECT = config.correctMark;
+                window.MARK_PER_WRONG = config.wrongMark;
+                
+                // Recalculate totals
+                let currentStart = 1;
+                config.subjects.forEach(subject => {
+                    subject.start = currentStart;
+                    subject.end = currentStart + subject.questions - 1;
+                    subject.mcq = subject.questions - (subject.numerical || 0);
+                    subject.numericalStart = subject.end - (subject.numerical || 0) + 1;
+                    currentStart = subject.end + 1;
+                });
+                
+                window.TOTAL_QUESTIONS = currentStart - 1;
+                window.ACTIVE_EXAM_SUBJECTS = config.activeForForms;
+                
+                // Update display
+                const totalDisplay = document.getElementById('totalQuestionsDisplay');
+                if (totalDisplay) {
+                    totalDisplay.innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
+                }
+                
+                console.log('✅ Config loaded for', className);
+            }
+        } else {
+            console.log('No config found for', className, '- using defaults');
+        }
+    } catch(e) {
+        console.log('Failed to load config:', e);
+    }
+}
 
+// Run when page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadClassConfig);
+} else {
+    loadClassConfig();
+}
+</script>
+<!-- ========== END CONFIG LOADER ========== -->
 
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
