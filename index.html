@@ -4375,8 +4375,9 @@ formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " 
 
 
    for (let subject of (EXAM_SETUP.activeForForms || [])) {
-     
-    const markValue = marks[subject]?.toFixed(2) || "0.00";
+    // Only send if subject has marks (not just 0)
+    if (marks[subject] !== undefined) {
+        const markValue = marks[subject].toFixed(2);
     
     
     switch(subject) {
