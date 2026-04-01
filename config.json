@@ -19,7 +19,7 @@
     },
     {
       "name": "BOTANY",
-      "questions": 12,
+      "questions": 10,
       "numerical": 0
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "name": "CHEMISTRY",
-      "questions": 40,
+      "questions": 2,
       "numerical": 0
     }
   ]
