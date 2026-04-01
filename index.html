@@ -4348,7 +4348,7 @@ formData.append(FORM_FIELDS.ROLL_NUMBER, answersData.student.roll);
 formData.append(FORM_FIELDS.ADMISSION_NUMBER, answersData.student.adm);
 
 
-const subjectCodes = ACTIVE_EXAM_SUBJECTS.map(s => {
+const subjectCodes = (EXAM_SETUP.activeForForms || []).map(s => {
     if (s === "MATHS_A") return "MA";
     if (s === "MATHS_B") return "MB";
     if (s === "MATHS") return "M";
@@ -4367,8 +4367,9 @@ const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear().
 formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " + subjectCodes);
 
 
-for (let subject of ACTIVE_EXAM_SUBJECTS) {
-   
+
+   for (let subject of (EXAM_SETUP.activeForForms || [])) {
+     
     const markValue = marks[subject]?.toFixed(2) || "0.00";
     
     
