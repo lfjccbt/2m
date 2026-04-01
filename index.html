@@ -1429,7 +1429,66 @@ body.anti-sleep-active {
 </head>
 
 <body>
+<script>
+// Load config from GitHub
+async function loadExamConfig() {
+    const className = window.location.pathname.split('/')[1] || '1D';
+    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
+    
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            const config = await res.json();
+            
+            // Update EXAM_SETUP
+            EXAM_SETUP = config;
+            
+            // Update marks variables
+            MARK_PER_CORRECT = config.correctMark;
+            MARK_PER_WRONG = config.wrongMark;
+            
+            // Update marks display on screen (THIS UPDATES CHANGE #1)
+            const correctDisplay = document.getElementById('correctMarkDisplay');
+            const wrongDisplay = document.getElementById('wrongMarkDisplay');
+            if (correctDisplay) correctDisplay.textContent = `CORRECT ANSWER + ${config.correctMark} MARKS`;
+            if (wrongDisplay) wrongDisplay.textContent = `WRONG ANSWER ${config.wrongMark} MARK`;
+            
+            // Recalculate question numbers
+            let start = 1;
+            EXAM_SETUP.subjects.forEach(s => {
+                s.start = start;
+                s.end = start + s.questions - 1;
+                s.mcq = s.questions - (s.numerical || 0);
+                s.numericalStart = s.end - (s.numerical || 0) + 1;
+                start = s.end + 1;
+            });
+            window.TOTAL_QUESTIONS = start - 1;
+            
+            // Update total questions display
+            const totalDisplay = document.getElementById('totalQuestionsDisplay');
+            if (totalDisplay) totalDisplay.innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
+            
+            // Update subject breakdown
+            let breakdownHTML = '';
+            EXAM_SETUP.subjects.forEach(s => {
+                if (s.numerical > 0) {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.mcq} (MCQ), ${s.numerical} (Numerical Input)</strong></p>`;
+                } else {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.questions} (MCQ)</strong></p>`;
+                }
+            });
+            const breakdownDiv = document.getElementById('subjectBreakdownDisplay');
+            if (breakdownDiv) breakdownDiv.innerHTML = breakdownHTML;
+            
+            console.log('✅ Config loaded');
+        }
+    } catch(e) {
+        console.log('Failed to load config');
+    }
+}
 
+loadExamConfig();
+</script>
 
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
@@ -1465,8 +1524,8 @@ body.anti-sleep-active {
     <h1>LFJC ONLINE EXAMINATION</h1>
     <p style="font-size: 1.2em; margin: 10px 0;" id="totalQuestionsDisplay">TOTAL QUESTIONS</p>
     <div id="subjectBreakdownDisplay"></div>
-   <p style="margin: 10px 0; font-weight: bold;">CORRECT ANSWER + 1 MARKS</p>  
-    <p style="margin: 5px 0; font-weight: bold;">WRONG ANSWER 0 MARK</p>
+  <p style="margin: 10px 0; font-weight: bold;" id="correctMarkDisplay">CORRECT ANSWER + 1 MARKS</p>  
+  <p style="margin: 5px 0; font-weight: bold;" id="wrongMarkDisplay">WRONG ANSWER 0 MARK</p>
     <input type="password" id="accessCode" class="access-code-input" placeholder="Enter Access Code">
     <button id="verifyAccess" class="verify-btn">VERIFY ACCESS</button>
     <div id="accessError" class="access-error">❌ Invalid access code. Please try again.</div>
@@ -1640,31 +1699,11 @@ body.anti-sleep-active {
 
 <script>
 
-const EXAM_SETUP = {
-    
-    subjects: [
-
-      { name: "PHYSICS", questions: 45, numerical: 0 },
-      { name: "CHEMISTRY", questions: 45, numerical: 0 }, 
-      { name: "BOTANY", questions: 45, numerical: 0 },
-      { name: "ZOOLOGY", questions: 45, numerical: 0 }
-    ],
-    
-    
+let EXAM_SETUP = {
+    subjects: [],
     duration: 180,
-    
-    
-    activeForForms: ["PHYSICS","CHEMISTRY","BOTANY","ZOOLOGY"]
- // MATHS_A	
- // MATHS_B	
- // MATHS	
- // BOTANY	
- // ZOOLOGY	
- // BZ	
- // PHYSICS	
- // CHEMISTRY
- };
-  
+    activeForForms: []
+};
     
     
 
@@ -1720,7 +1759,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('subjectBreakdownDisplay').innerHTML = breakdownHTML;
 });
 
-const MARK_PER_CORRECT = 1, MARK_PER_WRONG = 0;
+const MARK_PER_CORRECT = 1, MARK_Plet MARK_PER_CORRECT = 1, MARK_PER_WRONG = 0;ER_WRONG = 0;
 const STORAGE_KEY_PREFIX = "lfjc_exam_";
 const ACCESS_CODE = "lfjc2025";
 const ADMIN_PASSWORD = "admin2025";
