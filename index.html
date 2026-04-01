@@ -4882,5 +4882,29 @@ console.log("📁 Loading answer key from: " + ANSWER_KEY_URL);
 console.log(`📁 Expecting ${TOTAL_QUESTIONS} answers`);
 console.log("✅ Active subjects for this exam:", ACTIVE_EXAM_SUBJECTS.join(", "));
 </script> 
+ <script>
+// Password verification
+const ACCESS_CODE = "lfjc2025";
+
+function verifyAccessCode() {
+    const enteredCode = document.getElementById('accessCode').value.trim();
+    const errorElement = document.getElementById('accessError');
+    
+    if (enteredCode === ACCESS_CODE) {
+        document.getElementById('accessDenied').style.display = 'none';
+        document.getElementById('studentEntry').style.display = 'flex';
+        errorElement.style.display = 'none';
+    } else {
+        errorElement.style.display = 'block';
+        document.getElementById('accessCode').value = '';
+        document.getElementById('accessCode').focus();
+    }
+}
+
+document.getElementById('verifyAccess').addEventListener('click', verifyAccessCode);
+document.getElementById('accessCode').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') verifyAccessCode();
+});
+</script> 
 </body>
 </html>
