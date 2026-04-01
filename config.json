@@ -11,17 +11,17 @@
   ],
   "subjects": [
     {
-      "name": "MATHS_B",
-      "questions": 8,
-      "numerical": 0
-    },
-    {
-      "name": "PHYSICS",
+      "name": "MATHS_A",
       "questions": 4,
       "numerical": 0
     },
     {
-      "name": "CHEMISTRY",
+      "name": "PHYSICS",
+      "questions": 8,
+      "numerical": 0
+    },
+    {
+      "name": "BOTANY",
       "questions": 10,
       "numerical": 0
     }
