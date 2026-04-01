@@ -1755,30 +1755,45 @@ if (document.readyState === 'loading') {
 
 <script>
 
-const EXAM_SETUP = {
-    
-    subjects: [
-
-      { name: "PHYSICS", questions: 45, numerical: 0 },
-      { name: "CHEMISTRY", questions: 45, numerical: 0 }, 
-      { name: "BOTANY", questions: 45, numerical: 0 },
-      { name: "ZOOLOGY", questions: 45, numerical: 0 }
-    ],
-    
-    
+// ========== LOAD CONFIG FROM GITHUB ==========
+let EXAM_SETUP = {
+    subjects: [],
     duration: 180,
+    activeForForms: []
+};
+
+async function loadConfig() {
+    const className = window.location.pathname.split('/')[1] || '1D';
+    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
     
-    
-    activeForForms: ["PHYSICS","CHEMISTRY","BOTANY","ZOOLOGY"]
- // MATHS_A	
- // MATHS_B	
- // MATHS	
- // BOTANY	
- // ZOOLOGY	
- // BZ	
- // PHYSICS	
- // CHEMISTRY
- };
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            const config = await res.json();
+            EXAM_SETUP = config;
+            window.MARK_PER_CORRECT = config.correctMark;
+            window.MARK_PER_WRONG = config.wrongMark;
+            
+            // Recalculate question numbers
+            let start = 1;
+            EXAM_SETUP.subjects.forEach(s => {
+                s.start = start;
+                s.end = start + s.questions - 1;
+                s.mcq = s.questions - (s.numerical || 0);
+                s.numericalStart = s.end - (s.numerical || 0) + 1;
+                start = s.end + 1;
+            });
+            window.TOTAL_QUESTIONS = start - 1;
+            
+            document.getElementById('totalQuestionsDisplay').innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
+        }
+    } catch(e) {
+        console.log('Using defaults');
+    }
+}
+
+// Run this before exam starts
+await loadConfig();
   
     
     
