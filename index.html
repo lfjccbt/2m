@@ -1764,7 +1764,7 @@ const ACCESS_CODE = "lfjc2025";
 const ADMIN_PASSWORD = "admin2025";
 const RESUBMISSION_PASSWORD = "resubmit2025";
 const RESUBMISSION_WINDOW_HOURS = 24;
-
+let ACTIVE_EXAM_SUBJECTS = [];
 
 const ANSWER_KEY_URL = 'answer-key.txt';
 let answerKey = [];
@@ -4368,38 +4368,41 @@ formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " 
 
 
 
-   for (let subject of (EXAM_SETUP.activeForForms || [])) {
-     
-    const markValue = marks[subject]?.toFixed(2) || "0.00";
+   // Only send marks for ACTIVE subjects from config
+const activeSubjects = EXAM_SETUP.activeForForms || [];
+
+for (let subject of activeSubjects) {
+    // Only include if subject has marks calculated (not 0.00)
+    const markValue = marks[subject]?.toFixed(2);
     
-    
-    switch(subject) {
-        case "PHYSICS":
-            formData.append(FORM_FIELDS.PHYSICS, markValue);
-            break;
-        case "CHEMISTRY":
-            formData.append(FORM_FIELDS.CHEMISTRY, markValue);
-            break;
-        case "MATHS":
-            formData.append(FORM_FIELDS.MATHS, markValue);
-            break;
-        case "MATHS_A":
-            formData.append(FORM_FIELDS.MATHS_A, markValue);
-            break;
-        case "MATHS_B":
-            formData.append(FORM_FIELDS.MATHS_B, markValue);
-            break;
-        case "BOTANY":
-            formData.append(FORM_FIELDS.BOTANY, markValue);
-            break;
-        case "ZOOLOGY":
-            formData.append(FORM_FIELDS.ZOOLOGY, markValue);
-            break;
-        case "BZ":
-            formData.append(FORM_FIELDS.BZ, markValue);
-            break;
-        default:
-            console.log(`No field mapping for subject: ${subject}`);
+    // Only append if subject exists in marks (has questions)
+    if (markValue !== undefined) {
+        switch(subject) {
+            case "PHYSICS":
+                formData.append(FORM_FIELDS.PHYSICS, markValue);
+                break;
+            case "CHEMISTRY":
+                formData.append(FORM_FIELDS.CHEMISTRY, markValue);
+                break;
+            case "MATHS":
+                formData.append(FORM_FIELDS.MATHS, markValue);
+                break;
+            case "MATHS_A":
+                formData.append(FORM_FIELDS.MATHS_A, markValue);
+                break;
+            case "MATHS_B":
+                formData.append(FORM_FIELDS.MATHS_B, markValue);
+                break;
+            case "BOTANY":
+                formData.append(FORM_FIELDS.BOTANY, markValue);
+                break;
+            case "ZOOLOGY":
+                formData.append(FORM_FIELDS.ZOOLOGY, markValue);
+                break;
+            case "BZ":
+                formData.append(FORM_FIELDS.BZ, markValue);
+                break;
+        }
     }
 }
 
