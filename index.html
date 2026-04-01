@@ -1429,6 +1429,66 @@ body.anti-sleep-active {
 </head>
 
 <body>
+<script>
+// Load config from GitHub
+async function loadExamConfig() {
+    const className = window.location.pathname.split('/')[1] || '1D';
+    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
+    
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            const config = await res.json();
+            
+            // Update EXAM_SETUP
+            EXAM_SETUP = config;
+            
+            // Update marks variables
+            MARK_PER_CORRECT = config.correctMark;
+            MARK_PER_WRONG = config.wrongMark;
+            
+            // Update marks display on screen (THIS UPDATES CHANGE #1)
+            const correctDisplay = document.getElementById('correctMarkDisplay');
+            const wrongDisplay = document.getElementById('wrongMarkDisplay');
+            if (correctDisplay) correctDisplay.textContent = `CORRECT ANSWER + ${config.correctMark} MARKS`;
+            if (wrongDisplay) wrongDisplay.textContent = `WRONG ANSWER ${config.wrongMark} MARK`;
+            
+            // Recalculate question numbers
+            let start = 1;
+            EXAM_SETUP.subjects.forEach(s => {
+                s.start = start;
+                s.end = start + s.questions - 1;
+                s.mcq = s.questions - (s.numerical || 0);
+                s.numericalStart = s.end - (s.numerical || 0) + 1;
+                start = s.end + 1;
+            });
+            TOTAL_QUESTIONS = start - 1;
+            
+            // Update total questions display
+            const totalDisplay = document.getElementById('totalQuestionsDisplay');
+            if (totalDisplay) totalDisplay.innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
+            
+            // Update subject breakdown
+            let breakdownHTML = '';
+            EXAM_SETUP.subjects.forEach(s => {
+                if (s.numerical > 0) {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.mcq} (MCQ), ${s.numerical} (Numerical Input)</strong></p>`;
+                } else {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.questions} (MCQ)</strong></p>`;
+                }
+            });
+            const breakdownDiv = document.getElementById('subjectBreakdownDisplay');
+            if (breakdownDiv) breakdownDiv.innerHTML = breakdownHTML;
+            
+            console.log('✅ Config loaded');
+        }
+    } catch(e) {
+        console.log('Failed to load config');
+    }
+}
+
+loadExamConfig();
+</script>
 
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
@@ -1462,7 +1522,7 @@ body.anti-sleep-active {
 
 <div id="accessDenied" class="access-denied">
     <h1>LFJC ONLINE EXAMINATION</h1>
-    <p style="font-size: 1.2em; margin: 10px 0;" id="totalQuestionsDisplay">Loading...</p>
+    <p style="font-size: 1.2em; margin: 10px 0;" id="totalQuestionsDisplay">TOTAL QUESTIONS</p>
     <div id="subjectBreakdownDisplay"></div>
   <p style="margin: 10px 0; font-weight: bold;" id="correctMarkDisplay">CORRECT ANSWER + 1 MARKS</p>  
   <p style="margin: 5px 0; font-weight: bold;" id="wrongMarkDisplay">WRONG ANSWER 0 MARK</p>
@@ -4257,16 +4317,10 @@ function calculateSubjectMarks(summary) {
     const marks = {};
     let total = 0;
     
-    // Only include active subjects from config
-    const activeSubjects = EXAM_SETUP.activeForForms || [];
     
-    for (let subject of activeSubjects) {
-        if (summary[subject]) {
-            marks[subject] = summary[subject].marks;
-            total += summary[subject].marks;
-        } else {
-            marks[subject] = 0;
-        }
+    for (let subject in summary) {
+        marks[subject] = summary[subject].marks;
+        total += summary[subject].marks;
     }
     
     marks.total = total;
@@ -4294,7 +4348,7 @@ formData.append(FORM_FIELDS.ROLL_NUMBER, answersData.student.roll);
 formData.append(FORM_FIELDS.ADMISSION_NUMBER, answersData.student.adm);
 
 
-const subjectCodes = (EXAM_SETUP.activeForForms || []).map(s => {
+const subjectCodes = ACTIVE_EXAM_SUBJECTS.map(s => {
     if (s === "MATHS_A") return "MA";
     if (s === "MATHS_B") return "MB";
     if (s === "MATHS") return "M";
@@ -4313,11 +4367,9 @@ const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear().
 formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " + subjectCodes);
 
 
-
-   for (let subject of (EXAM_SETUP.activeForForms || [])) {
-    // Only send if subject has marks (not just 0)
-    if (marks[subject] !== undefined) {
-        const markValue = marks[subject].toFixed(2);
+for (let subject of ACTIVE_EXAM_SUBJECTS) {
+   
+    const markValue = marks[subject]?.toFixed(2) || "0.00";
     
     
     switch(subject) {
@@ -4357,7 +4409,7 @@ formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " 
         const allAnswersString = formatAllAnswersString(progress.answers);
         formData.append(FORM_FIELDS.ALL_ANSWERS, allAnswersString);
         
-        console.log("✅ Final submission with subjects:", (EXAM_SETUP.activeForForms || []).join(", "));
+        console.log("✅ Final submission with subjects:", ACTIVE_EXAM_SUBJECTS.join(", "));
         console.log("📤 Total marks:", marks.total.toFixed(2));
         console.log("📤 Answers string length:", allAnswersString.length);
         
@@ -4867,4 +4919,4 @@ console.log(`📁 Expecting ${TOTAL_QUESTIONS} answers`);
 console.log("✅ Active subjects for this exam:", ACTIVE_EXAM_SUBJECTS.join(", "));
 </script> 
 </body>
-</html>
+</html> check & tell
