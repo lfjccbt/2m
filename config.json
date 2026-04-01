@@ -5,7 +5,8 @@
   "activeForForms": [
     "MATHS",
     "PHYSICS",
-    "CHEMISTRY"
+    "CHEMISTRY",
+    "MATHS_A"
   ],
   "subjects": [
     {
@@ -15,7 +16,7 @@
     },
     {
       "name": "PHYSICS",
-      "questions": 40,
+      "questions": 4,
       "numerical": 0
     },
     {
