@@ -4883,6 +4883,7 @@ console.log(`📁 Expecting ${TOTAL_QUESTIONS} answers`);
 console.log("✅ Active subjects for this exam:", ACTIVE_EXAM_SUBJECTS.join(", "));
 </script> 
  <script>
+<script>
 // Password verification
 const ACCESS_CODE = "lfjc2025";
 
@@ -4901,10 +4902,18 @@ function verifyAccessCode() {
     }
 }
 
+// Show start button after page loads
+window.addEventListener('load', function() {
+    const startBtn = document.getElementById('stuStartBtn');
+    if (startBtn) {
+        startBtn.style.display = 'inline-block';
+    }
+});
+
 document.getElementById('verifyAccess').addEventListener('click', verifyAccessCode);
 document.getElementById('accessCode').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') verifyAccessCode();
 });
-</script> 
+</script>
 </body>
 </html>
