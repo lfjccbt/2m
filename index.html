@@ -1429,66 +1429,6 @@ body.anti-sleep-active {
 </head>
 
 <body>
-<script>
-// Load config from GitHub
-async function loadExamConfig() {
-    const className = window.location.pathname.split('/')[1] || '1D';
-    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
-    
-    try {
-        const res = await fetch(url);
-        if (res.ok) {
-            const config = await res.json();
-            
-            // Update EXAM_SETUP
-            EXAM_SETUP = config;
-            
-            // Update marks variables
-            MARK_PER_CORRECT = config.correctMark;
-            MARK_PER_WRONG = config.wrongMark;
-            
-            // Update marks display on screen (THIS UPDATES CHANGE #1)
-            const correctDisplay = document.getElementById('correctMarkDisplay');
-            const wrongDisplay = document.getElementById('wrongMarkDisplay');
-            if (correctDisplay) correctDisplay.textContent = `CORRECT ANSWER + ${config.correctMark} MARKS`;
-            if (wrongDisplay) wrongDisplay.textContent = `WRONG ANSWER ${config.wrongMark} MARK`;
-            
-            // Recalculate question numbers
-            let start = 1;
-            EXAM_SETUP.subjects.forEach(s => {
-                s.start = start;
-                s.end = start + s.questions - 1;
-                s.mcq = s.questions - (s.numerical || 0);
-                s.numericalStart = s.end - (s.numerical || 0) + 1;
-                start = s.end + 1;
-            });
-            TOTAL_QUESTIONS = start - 1;
-            document.getElementById('totalQuestionsDisplay').innerHTML = `<strong>TOTAL ${TOTAL_QUESTIONS} QUESTIONS</strong>`;
-            // Update total questions display
-            const totalDisplay = document.getElementById('totalQuestionsDisplay');
-            if (totalDisplay) totalDisplay.innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
-            
-            // Update subject breakdown
-            let breakdownHTML = '';
-            EXAM_SETUP.subjects.forEach(s => {
-                if (s.numerical > 0) {
-                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.mcq} (MCQ), ${s.numerical} (Numerical Input)</strong></p>`;
-                } else {
-                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.questions} (MCQ)</strong></p>`;
-                }
-            });
-            const breakdownDiv = document.getElementById('subjectBreakdownDisplay');
-            if (breakdownDiv) breakdownDiv.innerHTML = breakdownHTML;
-            
-            console.log('✅ Config loaded');
-        }
-    } catch(e) {
-        console.log('Failed to load config');
-    }
-}
-
-loadExamConfig();
-</script>
 
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
