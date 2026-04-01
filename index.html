@@ -1430,6 +1430,7 @@ body.anti-sleep-active {
 
 <body>
 
+
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
     <h2>⚡ EXAM RECOVERY AVAILABLE</h2>
@@ -1639,45 +1640,30 @@ body.anti-sleep-active {
 
 <script>
 
-// ========== LOAD CONFIG FROM GITHUB ==========
-let EXAM_SETUP = {
-    subjects: [],
-    duration: 180,
-    activeForForms: []
-};
-
-async function loadConfig() {
-    const className = window.location.pathname.split('/')[1] || '1D';
-    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
+const EXAM_SETUP = {
     
-    try {
-        const res = await fetch(url);
-        if (res.ok) {
-            const config = await res.json();
-            EXAM_SETUP = config;
-            window.MARK_PER_CORRECT = config.correctMark;
-            window.MARK_PER_WRONG = config.wrongMark;
-            
-            // Recalculate question numbers
-            let start = 1;
-            EXAM_SETUP.subjects.forEach(s => {
-                s.start = start;
-                s.end = start + s.questions - 1;
-                s.mcq = s.questions - (s.numerical || 0);
-                s.numericalStart = s.end - (s.numerical || 0) + 1;
-                start = s.end + 1;
-            });
-            window.TOTAL_QUESTIONS = start - 1;
-            
-            document.getElementById('totalQuestionsDisplay').innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
-        }
-    } catch(e) {
-        console.log('Using defaults');
-    }
-}
+    subjects: [
 
-// Run this before exam starts
-await loadConfig();
+      { name: "PHYSICS", questions: 45, numerical: 0 },
+      { name: "CHEMISTRY", questions: 45, numerical: 0 }, 
+      { name: "BOTANY", questions: 45, numerical: 0 },
+      { name: "ZOOLOGY", questions: 45, numerical: 0 }
+    ],
+    
+    
+    duration: 180,
+    
+    
+    activeForForms: ["PHYSICS","CHEMISTRY","BOTANY","ZOOLOGY"]
+ // MATHS_A	
+ // MATHS_B	
+ // MATHS	
+ // BOTANY	
+ // ZOOLOGY	
+ // BZ	
+ // PHYSICS	
+ // CHEMISTRY
+ };
   
     
     
@@ -4882,38 +4868,5 @@ console.log("📁 Loading answer key from: " + ANSWER_KEY_URL);
 console.log(`📁 Expecting ${TOTAL_QUESTIONS} answers`);
 console.log("✅ Active subjects for this exam:", ACTIVE_EXAM_SUBJECTS.join(", "));
 </script> 
- <script>
-<script>
-// Password verification
-const ACCESS_CODE = "lfjc2025";
-
-function verifyAccessCode() {
-    const enteredCode = document.getElementById('accessCode').value.trim();
-    const errorElement = document.getElementById('accessError');
-    
-    if (enteredCode === ACCESS_CODE) {
-        document.getElementById('accessDenied').style.display = 'none';
-        document.getElementById('studentEntry').style.display = 'flex';
-        errorElement.style.display = 'none';
-    } else {
-        errorElement.style.display = 'block';
-        document.getElementById('accessCode').value = '';
-        document.getElementById('accessCode').focus();
-    }
-}
-
-// Show start button after page loads
-window.addEventListener('load', function() {
-    const startBtn = document.getElementById('stuStartBtn');
-    if (startBtn) {
-        startBtn.style.display = 'inline-block';
-    }
-});
-
-document.getElementById('verifyAccess').addEventListener('click', verifyAccessCode);
-document.getElementById('accessCode').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') verifyAccessCode();
-});
-</script>
 </body>
 </html>
