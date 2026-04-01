@@ -4890,12 +4890,11 @@ window.addEventListener('load', function() {
   
   systemTrayDetector = new SystemTrayViolationDetector();
   
-  loadAnswerKey().then(success => {
-    if (success) {
-      console.log("✅ External answer key loaded successfully!");
-      showToast('✅ Answer key loaded!', 'success', 3000);
-    }
-  });
+  // Wait for config to load first, then load answer key
+(async function() {
+    await loadExamConfig();    // Load config first
+    await loadAnswerKey();      // Then load answer key
+})();
   
   setTimeout(() => {
     initPowerLossProtection();
