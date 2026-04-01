@@ -1429,7 +1429,66 @@ body.anti-sleep-active {
 </head>
 
 <body>
+<script>
+// Load config from GitHub
+async function loadExamConfig() {
+    const className = window.location.pathname.split('/')[1] || '1D';
+    const url = `https://raw.githubusercontent.com/lfjccbt/${className}/main/config.json?t=${Date.now()}`;
+    
+    try {
+        const res = await fetch(url);
+        if (res.ok) {
+            const config = await res.json();
+            
+            // Update EXAM_SETUP
+            EXAM_SETUP = config;
+            
+            // Update marks variables
+            MARK_PER_CORRECT = config.correctMark;
+            MARK_PER_WRONG = config.wrongMark;
+            
+            // Update marks display on screen (THIS UPDATES CHANGE #1)
+            const correctDisplay = document.getElementById('correctMarkDisplay');
+            const wrongDisplay = document.getElementById('wrongMarkDisplay');
+            if (correctDisplay) correctDisplay.textContent = `CORRECT ANSWER + ${config.correctMark} MARKS`;
+            if (wrongDisplay) wrongDisplay.textContent = `WRONG ANSWER ${config.wrongMark} MARK`;
+            
+            // Recalculate question numbers
+            let start = 1;
+            EXAM_SETUP.subjects.forEach(s => {
+                s.start = start;
+                s.end = start + s.questions - 1;
+                s.mcq = s.questions - (s.numerical || 0);
+                s.numericalStart = s.end - (s.numerical || 0) + 1;
+                start = s.end + 1;
+            });
+            TOTAL_QUESTIONS = start - 1;
+            document.getElementById('totalQuestionsDisplay').innerHTML = `<strong>TOTAL ${TOTAL_QUESTIONS} QUESTIONS</strong>`;
+            // Update total questions display
+            const totalDisplay = document.getElementById('totalQuestionsDisplay');
+            if (totalDisplay) totalDisplay.innerHTML = `<strong>TOTAL ${window.TOTAL_QUESTIONS} QUESTIONS</strong>`;
+            
+            // Update subject breakdown
+            let breakdownHTML = '';
+            EXAM_SETUP.subjects.forEach(s => {
+                if (s.numerical > 0) {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.mcq} (MCQ), ${s.numerical} (Numerical Input)</strong></p>`;
+                } else {
+                    breakdownHTML += `<p style="margin: 5px 0;"><strong>• ${s.name}: ${s.questions} (MCQ)</strong></p>`;
+                }
+            });
+            const breakdownDiv = document.getElementById('subjectBreakdownDisplay');
+            if (breakdownDiv) breakdownDiv.innerHTML = breakdownHTML;
+            
+            console.log('✅ Config loaded');
+        }
+    } catch(e) {
+        console.log('Failed to load config');
+    }
+}
 
+loadExamConfig();
+</script>
 
 <div id="powerLossRecoveryOverlay">
   <div id="powerLossRecoveryBox">
@@ -1463,7 +1522,7 @@ body.anti-sleep-active {
 
 <div id="accessDenied" class="access-denied">
     <h1>LFJC ONLINE EXAMINATION</h1>
-    <p style="font-size: 1.2em; margin: 10px 0;" id="totalQuestionsDisplay">TOTAL QUESTIONS</p>
+    <p style="font-size: 1.2em; margin: 10px 0;" id="totalQuestionsDisplay">Loading...</p>
     <div id="subjectBreakdownDisplay"></div>
   <p style="margin: 10px 0; font-weight: bold;" id="correctMarkDisplay">CORRECT ANSWER + 1 MARKS</p>  
   <p style="margin: 5px 0; font-weight: bold;" id="wrongMarkDisplay">WRONG ANSWER 0 MARK</p>
@@ -1658,6 +1717,7 @@ EXAM_SETUP.subjects.forEach(subject => {
 });
 
 const EXAM_DURATION_MINUTES = EXAM_SETUP.duration;
+const ACTIVE_EXAM_SUBJECTS = EXAM_SETUP.activeForForms;
 
 
 const SUBJECTS = EXAM_SETUP.subjects.map(s => ({
@@ -1704,7 +1764,7 @@ const ACCESS_CODE = "lfjc2025";
 const ADMIN_PASSWORD = "admin2025";
 const RESUBMISSION_PASSWORD = "resubmit2025";
 const RESUBMISSION_WINDOW_HOURS = 24;
-let ACTIVE_EXAM_SUBJECTS = [];
+
 
 const ANSWER_KEY_URL = 'answer-key.txt';
 let answerKey = [];
@@ -4253,6 +4313,21 @@ function formatAllAnswersString(answers) {
     return result;
 }
 
+function calculateSubjectMarks(summary) {
+    const marks = {};
+    let total = 0;
+    
+    
+    for (let subject in summary) {
+        marks[subject] = summary[subject].marks;
+        total += summary[subject].marks;
+    }
+    
+    marks.total = total;
+    return marks;
+}
+
+
 async function submitToGoogleForms(answersData) {
     const FORM_URL = GOOGLE_FORMS[assignedForm];
     
@@ -4266,78 +4341,76 @@ async function submitToGoogleForms(answersData) {
         const marks = calculateSubjectMarks(answersData.summary);
         const formData = new URLSearchParams();
         
-        // Student information (ALWAYS sent)
-        formData.append(FORM_FIELDS.STUDENT_NAME, answersData.student.name);
-        formData.append(FORM_FIELDS.SECTION, answersData.student.sec);
-        formData.append(FORM_FIELDS.ROLL_NUMBER, answersData.student.roll);
-        formData.append(FORM_FIELDS.ADMISSION_NUMBER, answersData.student.adm);
-        
-        // ===== GET ACTIVE SUBJECTS FROM CONFIG =====
-        const activeSubjects = EXAM_SETUP.activeForForms || [];
-        
-        // Format subject codes for SECTION field
-        const subjectCodes = activeSubjects.map(s => {
-            if (s === "MATHS_A") return "MA";
-            if (s === "MATHS_B") return "MB";
-            if (s === "MATHS") return "M";
-            if (s === "PHYSICS") return "P";
-            if (s === "CHEMISTRY") return "C";
-            if (s === "BOTANY") return "B";
-            if (s === "ZOOLOGY") return "Z";
-            if (s === "BZ") return "BZ";
-            return s.substring(0,1);
-        }).join(', ');
-        
-        const today = new Date();
-        const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear().toString().slice(-2)}`;
-        
-        // Update SECTION field with date and subject codes
-        formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " + subjectCodes);
-        
-        // ===== SEND MARKS ONLY FOR ACTIVE SUBJECTS =====
-        for (let subject of activeSubjects) {
-            const markValue = marks[subject]?.toFixed(2) || "0.00";
-            
-            // Send to the correct form field
-            switch(subject) {
-                case "PHYSICS":
-                    formData.append(FORM_FIELDS.PHYSICS, markValue);
-                    break;
-                case "CHEMISTRY":
-                    formData.append(FORM_FIELDS.CHEMISTRY, markValue);
-                    break;
-                case "MATHS":
-                    formData.append(FORM_FIELDS.MATHS, markValue);
-                    break;
-                case "MATHS_A":
-                    formData.append(FORM_FIELDS.MATHS_A, markValue);
-                    break;
-                case "MATHS_B":
-                    formData.append(FORM_FIELDS.MATHS_B, markValue);
-                    break;
-                case "BOTANY":
-                    formData.append(FORM_FIELDS.BOTANY, markValue);
-                    break;
-                case "ZOOLOGY":
-                    formData.append(FORM_FIELDS.ZOOLOGY, markValue);
-                    break;
-                case "BZ":
-                    formData.append(FORM_FIELDS.BZ, markValue);
-                    break;
-                default:
-                    console.log(`No field mapping for subject: ${subject}`);
-            }
-        }
-        
-        // ALWAYS send total marks
+
+formData.append(FORM_FIELDS.STUDENT_NAME, answersData.student.name);
+formData.append(FORM_FIELDS.SECTION, answersData.student.sec);
+formData.append(FORM_FIELDS.ROLL_NUMBER, answersData.student.roll);
+formData.append(FORM_FIELDS.ADMISSION_NUMBER, answersData.student.adm);
+
+
+const subjectCodes = (EXAM_SETUP.activeForForms || []).map(s => {
+    if (s === "MATHS_A") return "MA";
+    if (s === "MATHS_B") return "MB";
+    if (s === "MATHS") return "M";
+    if (s === "PHYSICS") return "P";
+    if (s === "CHEMISTRY") return "C";
+    if (s === "BOTANY") return "B";
+    if (s === "ZOOLOGY") return "Z";
+    if (s === "BZ") return "BZ";
+    return s.substring(0,1);
+}).join(', ');
+
+const today = new Date();
+const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear().toString().slice(-2)}`;
+
+
+formData.set(FORM_FIELDS.SECTION, answersData.student.sec + " " + dateStr + " " + subjectCodes);
+
+
+
+   for (let subject of (EXAM_SETUP.activeForForms || [])) {
+     
+    const markValue = marks[subject]?.toFixed(2) || "0.00";
+    
+    
+    switch(subject) {
+        case "PHYSICS":
+            formData.append(FORM_FIELDS.PHYSICS, markValue);
+            break;
+        case "CHEMISTRY":
+            formData.append(FORM_FIELDS.CHEMISTRY, markValue);
+            break;
+        case "MATHS":
+            formData.append(FORM_FIELDS.MATHS, markValue);
+            break;
+        case "MATHS_A":
+            formData.append(FORM_FIELDS.MATHS_A, markValue);
+            break;
+        case "MATHS_B":
+            formData.append(FORM_FIELDS.MATHS_B, markValue);
+            break;
+        case "BOTANY":
+            formData.append(FORM_FIELDS.BOTANY, markValue);
+            break;
+        case "ZOOLOGY":
+            formData.append(FORM_FIELDS.ZOOLOGY, markValue);
+            break;
+        case "BZ":
+            formData.append(FORM_FIELDS.BZ, markValue);
+            break;
+        default:
+            console.log(`No field mapping for subject: ${subject}`);
+    }
+}
+
+      
         formData.append(FORM_FIELDS.TOTAL_MARKS, marks.total.toFixed(2));
         
-        // Format all answers as comma-separated string
+        
         const allAnswersString = formatAllAnswersString(progress.answers);
         formData.append(FORM_FIELDS.ALL_ANSWERS, allAnswersString);
         
-        console.log("✅ Final submission with active subjects:", activeSubjects.join(", "));
-        console.log("📤 Subject marks:", Object.keys(marks).map(s => `${s}: ${marks[s]}`).join(", "));
+        console.log("✅ Final submission with subjects:", (EXAM_SETUP.activeForForms || []).join(", "));
         console.log("📤 Total marks:", marks.total.toFixed(2));
         console.log("📤 Answers string length:", allAnswersString.length);
         
@@ -4359,7 +4432,26 @@ async function submitToGoogleForms(answersData) {
         return false;
     }
 }
-   
+
+function saveSubmissionLocally(answersData) {
+    try {
+        const localSubmissions = JSON.parse(localStorage.getItem('local_exam_submissions') || '[]');
+        localSubmissions.push({
+            ...answersData,
+            savedAt: new Date().toISOString(),
+            needsSync: true,
+            form: assignedForm
+        });
+        
+        localStorage.setItem('local_exam_submissions', JSON.stringify(localSubmissions));
+        
+        console.log('💾 Submission saved locally for manual recovery');
+        showToast('💾 Submission saved locally. Contact administrator if needed.', 'warning', 5000);
+        
+    } catch (error) {
+        console.error('❌ Failed to save submission locally:', error);
+    }
+}
 
 function updateSubmissionStatus(status, message) {
     googleFormsSubmissionStatus = status;
@@ -4828,4 +4920,4 @@ console.log(`📁 Expecting ${TOTAL_QUESTIONS} answers`);
 console.log("✅ Active subjects for this exam:", ACTIVE_EXAM_SUBJECTS.join(", "));
 </script> 
 </body>
-</html> 
+</html> this was taking answer key
