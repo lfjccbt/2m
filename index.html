@@ -2591,18 +2591,31 @@ function parseAnswerKeyFile(text) {
     
     for (let line of lines) {
         line = line.trim();
-        if (line) {
-            
-            if (line.length === 5 && /^[A-D]{5}$/.test(line)) {
-                
-                const lineAnswers = line.split('');
-                answers.push(...lineAnswers);
-                console.log(`📝 Line "${line}" → 5 MCQ answers:`, lineAnswers);
-            } else {
-                
-                answers.push(line);
-                console.log(`📝 Single answer: "${line}"`);
+        if (!line) continue;
+        
+        // Check if line contains ONLY letters A-D
+        if (/^[A-D]+$/i.test(line)) {
+            // Letters: split each character as separate answer
+            for (let i = 0; i < line.length; i++) {
+                answers.push(line[i].toUpperCase());
             }
+            console.log(`📝 Letters "${line}" → ${line.length} answers`);
+        }
+        // Check if line contains numbers (numerical answers)
+        else if (/^[0-9]+$/.test(line)) {
+            // Numbers: whole line is ONE answer
+            answers.push(line);
+            console.log(`📝 Numerical "${line}" → 1 answer`);
+        }
+        // Mixed or other (should not happen)
+        else {
+            // Try to parse as individual letters if they are A-D
+            for (let i = 0; i < line.length; i++) {
+                if (line[i].match(/[A-D]/i)) {
+                    answers.push(line[i].toUpperCase());
+                }
+            }
+            console.log(`📝 Mixed "${line}" → parsed as letters`);
         }
     }
     
