@@ -13,18 +13,23 @@
   ],
   "subjects": [
     {
-      "name": "MATHS",
+      "name": "ZOOLOGY",
       "questions": 7,
       "numerical": 0
     },
     {
-      "name": "PHYSICS",
+      "name": "BOTANY",
       "questions": 12,
       "numerical": 0
     },
     {
-      "name": "MATHS_B",
+      "name": "PHYSICS",
       "questions": 3,
+      "numerical": 0
+    },
+    {
+      "name": "CHEMISTRY",
+      "questions": 40,
       "numerical": 0
     }
   ]
