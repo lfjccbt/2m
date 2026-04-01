@@ -4317,10 +4317,16 @@ function calculateSubjectMarks(summary) {
     const marks = {};
     let total = 0;
     
+    // Only include active subjects from config
+    const activeSubjects = EXAM_SETUP.activeForForms || [];
     
-    for (let subject in summary) {
-        marks[subject] = summary[subject].marks;
-        total += summary[subject].marks;
+    for (let subject of activeSubjects) {
+        if (summary[subject]) {
+            marks[subject] = summary[subject].marks;
+            total += summary[subject].marks;
+        } else {
+            marks[subject] = 0;
+        }
     }
     
     marks.total = total;
