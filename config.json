@@ -6,7 +6,8 @@
     "MATHS",
     "PHYSICS",
     "CHEMISTRY",
-    "MATHS_A"
+    "MATHS_A",
+    "MATHS_B"
   ],
   "subjects": [
     {
@@ -21,7 +22,7 @@
     },
     {
       "name": "CHEMISTRY",
-      "questions": 2,
+      "questions": 10,
       "numerical": 0
     }
   ]
