@@ -1,7 +1,7 @@
 {
   "duration": 15,
   "correctMark": 4,
-  "wrongMark": 0,
+  "wrongMark": -1,
   "activeForForms": [
     "MATHS",
     "PHYSICS",
