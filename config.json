@@ -2,20 +2,21 @@
   "duration": 15,
   "correctMark": 1,
   "wrongMark": 0,
+  "activeForForms": [],
   "subjects": [
     {
       "name": "ZOOLOGY",
-      "questions": 6,
+      "questions": 4,
       "numerical": 0
     },
     {
       "name": "BOTANY",
-      "questions": 11,
+      "questions": 16,
       "numerical": 0
     },
     {
       "name": "PHYSICS",
-      "questions": 3,
+      "questions": 1,
       "numerical": 0
     },
     {
