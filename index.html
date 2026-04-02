@@ -1430,6 +1430,68 @@ body.anti-sleep-active {
 
 <body>
 <script>
+    // Class lock check - redirects if class is locked
+    (function() {
+        // Get class name from URL or page
+        const className = '2M'; // Change this for each class!
+        const LOCK_CONFIG_URL = 'https://raw.githubusercontent.com/lfjccbt/lock/main/locks.json';
+        
+        async function checkLockAndRedirect() {
+            try {
+                const response = await fetch(LOCK_CONFIG_URL + '?t=' + Date.now());
+                if (!response.ok) return;
+                
+                const locks = await response.json();
+                
+                if (locks[className] === true) {
+                    // Class is locked - redirect to lock message page
+                    document.body.innerHTML = `
+                        <div style="
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            background: linear-gradient(135deg, #141E30 0%, #243B55 100%);
+                            font-family: system-ui;
+                            text-align: center;
+                            padding: 20px;
+                        ">
+                            <div style="
+                                background: white;
+                                border-radius: 30px;
+                                padding: 50px;
+                                max-width: 450px;
+                                border: 3px solid #ef4444;
+                            ">
+                                <div style="font-size: 80px;">🔒</div>
+                                <h1 style="color: #dc2626; margin: 20px 0;">Class Locked</h1>
+                                <p style="color: #4b5563; margin-bottom: 30px; font-size: 18px;">
+                                    Class ${className} is currently locked by the administrator.<br><br>
+                                    Please check back later.
+                                </p>
+                                <button onclick="window.location.href='../'" style="
+                                    background: #ef4444;
+                                    color: white;
+                                    border: none;
+                                    padding: 12px 30px;
+                                    border-radius: 40px;
+                                    font-size: 16px;
+                                    cursor: pointer;
+                                ">← Go Back</button>
+                            </div>
+                        </div>
+                    `;
+                    document.title = `Class ${className} Locked`;
+                }
+            } catch (error) {
+                console.error('Lock check error:', error);
+            }
+        }
+        
+        checkLockAndRedirect();
+    })();
+</script>  
+<script>
 // Load config from GitHub
 async function loadExamConfig() {
     const className = window.location.pathname.split('/')[1] || '1D';
