@@ -2,7 +2,11 @@
   "duration": 180,
   "correctMark": 1,
   "wrongMark": 0,
-  "activeForForms": [],
+  "activeForForms": [
+    "MATHS",
+    "PHYSICS",
+    "CHEMISTRY"
+  ],
   "subjects": [
     {
       "name": "MATHS",
