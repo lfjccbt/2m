@@ -1,14 +1,14 @@
 {
-  "duration": 180,
+  "duration": 120,
   "correctMark": 1,
   "wrongMark": 0,
   "activeForForms": [
-    "MATHS"
+    "PHYSICS"
   ],
   "subjects": [
     {
-      "name": "MATHS",
-      "questions": 15,
+      "name": "PHYSICS",
+      "questions": 25,
       "numerical": 0
     }
   ]
